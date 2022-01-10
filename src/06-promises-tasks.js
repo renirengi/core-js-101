@@ -1,3 +1,4 @@
+/* eslint-disable consistent-return */
 /* ************************************************************************************************
  *                                                                                                *
  * Please read the following tutorial before implementing tasks:                                   *
@@ -28,10 +29,20 @@
  *      .catch((error) => console.log(error.message)) // 'Error: Wrong parameter is passed!
  *                                                    //  Ask her again.';
  */
-function willYouMarryMe(/* isPositiveAnswer */) {
-  throw new Error('Not implemented');
+function willYouMarryMe(isPositiveAnswer) {
+  return new Promise((resolve, reject) => {
+    if (typeof isPositiveAnswer === 'boolean') {
+      if (isPositiveAnswer) {
+        resolve('Hooray!!! She said "Yes"!');
+      } else {
+        resolve('Oh no, she said "No".');
+      }
+    }
+    // eslint-disable-next-line prefer-promise-reject-errors
+    reject('Wrong parameter is passed! Ask her again.');
+  })
+    .then((value) => value).catch((err) => { throw new Error(err); });
 }
-
 
 /**
  * Return Promise object that should be resolved with array containing plain values.
@@ -48,8 +59,9 @@ function willYouMarryMe(/* isPositiveAnswer */) {
  *    })
  *
  */
-function processAllPromises(/* array */) {
-  throw new Error('Not implemented');
+function processAllPromises(array) {
+  return Promise.allSettled(array)
+    .then((values) => values.map((value) => value.value));
 }
 
 /**
@@ -71,9 +83,18 @@ function processAllPromises(/* array */) {
  *    })
  *
  */
-function getFastestPromise(/* array */) {
-  throw new Error('Not implemented');
+function getFastestPromise(array) {
+  return Promise.race(array)
+    .then((value) => {
+      if (value) {
+        return value;
+      }
+    })
+    .catch((err) => {
+      throw new Error(err);
+    });
 }
+
 
 /**
  * Return Promise object that should be resolved with value that is
@@ -92,8 +113,11 @@ function getFastestPromise(/* array */) {
  *    });
  *
  */
-function chainPromises(/* array, action */) {
-  throw new Error('Not implemented');
+function chainPromises(array, action) {
+  return Promise.allSettled(array)
+    .then((results) => results.map((value) => value.value))
+    .then((values) => values.reduce(action))
+    .catch((err) => err);
 }
 
 module.exports = {

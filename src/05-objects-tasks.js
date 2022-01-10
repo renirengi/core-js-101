@@ -119,33 +119,133 @@ function fromJSON(proto, json) {
  *  For more examples see unit tests.
  */
 
+const OneTimeInsideError = 'Element, id and pseudo-element should not occur more then one time inside the selector';
+const FollowingOrderError = 'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element';
+
+class Builder {
+  constructor(value) {
+    this.value1 = '';
+    if (arguments.length > 0) {
+      this.value1 = value;
+    }
+  }
+
+  stringify() {
+    return this.value1;
+  }
+
+  element(value) {
+    if (this.elementExist) {
+      throw new Error(OneTimeInsideError);
+    }
+
+    if (this.idExist || this.classExist || this.attrExist || this.pseudoClassExist
+      || this.pseudoElementExist) {
+      throw new Error(FollowingOrderError);
+    }
+
+    this.elementExist = true;
+    this.value1 += value;
+    return this;
+  }
+
+  id(value) {
+    if (this.idExist) {
+      throw new Error(OneTimeInsideError);
+    }
+
+    if (this.classExist || this.attrExist || this.pseudoClassExist || this.pseudoElementExist) {
+      throw new Error(FollowingOrderError);
+    }
+
+    this.idExist = true;
+    this.value1 += '#';
+    this.value1 += value;
+    return this;
+  }
+
+  class(value) {
+    if (this.attrExist || this.pseudoClassExist || this.pseudoElementExist) {
+      throw new Error(FollowingOrderError);
+    }
+
+    this.classExist = true;
+    this.value1 += '.';
+    this.value1 += value;
+    return this;
+  }
+
+  attr(value) {
+    if (this.pseudoClassExist || this.pseudoElementExist) {
+      throw new Error(FollowingOrderError);
+    }
+
+    this.attrExist = true;
+    this.value1 += '[';
+    this.value1 += value;
+    this.value1 += ']';
+    return this;
+  }
+
+  pseudoClass(value) {
+    if (this.pseudoElementExist) {
+      throw new Error(FollowingOrderError);
+    }
+
+    this.pseudoClassExist = true;
+    this.value1 += ':';
+    this.value1 += value;
+    return this;
+  }
+
+  pseudoElement(value) {
+    if (this.pseudoElementExist) {
+      throw new Error(OneTimeInsideError);
+    }
+
+    this.pseudoElementExist = true;
+    this.value1 += '::';
+    this.value1 += value;
+    return this;
+  }
+
+  combine(selector1, combinator, selector2) {
+    this.value1 += selector1.stringify();
+    this.value1 += ' ';
+    this.value1 += combinator;
+    this.value1 += ' ';
+    this.value1 += selector2.stringify();
+    return this;
+  }
+}
+
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  element(value) {
+    return new Builder().element(value);
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    return new Builder().id(value);
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    return new Builder().class(value);
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    return new Builder().attr(value);
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    return new Builder().pseudoClass(value);
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    return new Builder().pseudoElement(value);
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    return new Builder().combine(selector1, combinator, selector2);
   },
 };
 
